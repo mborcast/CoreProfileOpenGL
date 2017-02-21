@@ -4,7 +4,7 @@
 
 External dependencies can be found in the **deps** folder.
 
-Setup:
+Add **glew32.dll** and **glfw3.dll** to the .exe paths.
 
 | VC++ directories  | Path |
 | ------ | -------- |
