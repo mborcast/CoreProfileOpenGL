@@ -7,6 +7,7 @@
 
 #include "shader.hpp"
 #include "Camera.h"
+#include "Spotlight.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -22,6 +23,19 @@ const GLuint WIDTH = 800, HEIGHT = 600;
 
 // Camera
 Camera  gCamera(glm::vec3(0.0f, 0.0f, 3.0f));
+
+// Spotlights
+Spotlight gSpotlightA(glm::vec3(0.0, 3.0, 0.0), 
+					  glm::vec3(0.0, 0.0, 0.0), 
+					  glm::cos(glm::radians(20.0f)), 
+					  glm::cos(glm::radians(25.0f)), 
+					  1.0f, 0.09f, 0.032);
+
+Spotlight gSpotlightB(glm::vec3(2.0, 3.0, 3.0), 
+					  glm::vec3(2.0, 0.0, 0.0), 
+					  glm::cos(glm::radians(8.0f)), 
+					  glm::cos(glm::radians(10.0f)), 
+					  1.0f, 0.09f, 0.032);
 
 // Deltatime
 GLfloat gDeltaTime = 0.0f;	// Time between current frame and last frame
@@ -198,59 +212,49 @@ int main()
 		GLint lViewPosLoc = glGetUniformLocation(lLightingProgramID, "viewPos");
 		glUniform3f(lViewPosLoc, gCamera.Position.x, gCamera.Position.y, gCamera.Position.z);
 
-
 		//Get PROPERTIES for SPOTLIGHT A
 		GLint lSpotlightPosLoc = glGetUniformLocation(lLightingProgramID, "lightA.position");
 		GLint lSpotlightDirLoc = glGetUniformLocation(lLightingProgramID, "lightA.direction");
-
-		glm::vec3 lSpotlightPositionA(0.0, 3.0, 0.0);
-		glm::vec3 lSpotlightTargetA(0.0, 0.0, 0.0);
-		glm::vec3 lSpotlightDirectionA = lSpotlightTargetA - lSpotlightPositionA;
-		glUniform3f(lSpotlightPosLoc, lSpotlightPositionA.x, lSpotlightPositionA.y, lSpotlightPositionA.z);
-		glUniform3f(lSpotlightDirLoc, lSpotlightDirectionA.x, lSpotlightDirectionA.y, lSpotlightDirectionA.z);
-
 		GLint lSpotlightCutOffLoc = glGetUniformLocation(lLightingProgramID, "lightA.cutOff");
 		GLint lSpotlightOuterCutOffLoc = glGetUniformLocation(lLightingProgramID, "lightA.outerCutOff");
-		glUniform1f(lSpotlightCutOffLoc, glm::cos(glm::radians(20.0f)));
-		glUniform1f(lSpotlightOuterCutOffLoc, glm::cos(glm::radians(25.0f)));
 
-		glm::vec3 lSpotlightDiffuse = lSpotlightColor   * glm::vec3(0.8f); // Decrease the influence
-		glm::vec3 lSpotlightAmbient = lSpotlightDiffuse * glm::vec3(0.2f); // Low influence
+		gSpotlightA.mpSetColor(1.0f, 0.0f, 0.0f);
 
-		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.ambient"), lSpotlightAmbient.x, lSpotlightAmbient.y, lSpotlightAmbient.z);
-		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.diffuse"), lSpotlightDiffuse.x, lSpotlightDiffuse.y, lSpotlightDiffuse.z);
-		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.specular"), 1.0f, 1.0f, 1.0f);
+		glUniform3f(lSpotlightPosLoc, gSpotlightA.aPosition.x,  gSpotlightA.aPosition.y,  gSpotlightA.aPosition.z);
+		glUniform3f(lSpotlightDirLoc, gSpotlightA.aDirection.x, gSpotlightA.aDirection.y, gSpotlightA.aDirection.z);
 
-		glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.constant"), 1.0f);
-		glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.linear"), 0.09);
-		glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.quadratic"), 0.032);
+		glUniform1f(lSpotlightCutOffLoc,      gSpotlightA.aCutoff);
+		glUniform1f(lSpotlightOuterCutOffLoc, gSpotlightA.aOuterCutoff);
+
+		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.ambient"),  gSpotlightA.aAmbient.r,  gSpotlightA.aAmbient.g,  gSpotlightA.aAmbient.b);
+		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.diffuse"),  gSpotlightA.aDiffuse.r,  gSpotlightA.aDiffuse.g,  gSpotlightA.aDiffuse.b);
+		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.specular"), gSpotlightA.aSpecular.r, gSpotlightA.aSpecular.g, gSpotlightA.aSpecular.b);
+		glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.constant"), gSpotlightA.aConstant);
+
+		glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.linear"),    gSpotlightA.aLinear);
+		glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.quadratic"), gSpotlightA.aQuadratic);
 
 		//Get PROPERTIES for SPOTLIGHT B
-
 		lSpotlightPosLoc = glGetUniformLocation(lLightingProgramID, "lightB.position");
 		lSpotlightDirLoc = glGetUniformLocation(lLightingProgramID, "lightB.direction");
-
-		glm::vec3 lSpotlightPositionB(2.0, 3.0, 3.0);
-		glm::vec3 lSpotlightTargetB(2.0, 0.0, 0.0);
-		glm::vec3 lSpotlightDirectionB = lSpotlightTargetB - lSpotlightPositionB;
-		glUniform3f(lSpotlightPosLoc, lSpotlightPositionB.x, lSpotlightPositionB.y, lSpotlightPositionB.z);
-		glUniform3f(lSpotlightDirLoc, lSpotlightDirectionB.x, lSpotlightDirectionB.y, lSpotlightDirectionB.z);
-
 		lSpotlightCutOffLoc = glGetUniformLocation(lLightingProgramID, "lightB.cutOff");
 		lSpotlightOuterCutOffLoc = glGetUniformLocation(lLightingProgramID, "lightB.outerCutOff");
-		glUniform1f(lSpotlightCutOffLoc, glm::cos(glm::radians(8.0f)));
-		glUniform1f(lSpotlightOuterCutOffLoc, glm::cos(glm::radians(10.0f)));
 
-		lSpotlightDiffuse = lSpotlightColor   * glm::vec3(0.8f); // Decrease the influence
-		lSpotlightAmbient = lSpotlightDiffuse * glm::vec3(0.2f); // Low influence
+		gSpotlightB.mpSetColor(1.0f, 0.0f, 0.0f);
 
-		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.ambient"), lSpotlightAmbient.x, lSpotlightAmbient.y, lSpotlightAmbient.z);
-		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.diffuse"), lSpotlightDiffuse.x, lSpotlightDiffuse.y, lSpotlightDiffuse.z);
-		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.specular"), 1.0f, 1.0f, 1.0f);
+		glUniform3f(lSpotlightPosLoc, gSpotlightB.aPosition.x,  gSpotlightB.aPosition.y,  gSpotlightB.aPosition.z);
+		glUniform3f(lSpotlightDirLoc, gSpotlightB.aDirection.x, gSpotlightB.aDirection.y, gSpotlightB.aDirection.z);
 
-		glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.constant"), 1.0f);
-		glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.linear"), 0.09);
-		glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.quadratic"), 0.032);
+		glUniform1f(lSpotlightCutOffLoc,      gSpotlightB.aCutoff);
+		glUniform1f(lSpotlightOuterCutOffLoc, gSpotlightB.aOuterCutoff);
+
+		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.ambient"),  gSpotlightB.aAmbient.r,  gSpotlightB.aAmbient.g,  gSpotlightB.aAmbient.b);
+		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.diffuse"),  gSpotlightB.aDiffuse.r,  gSpotlightB.aDiffuse.g,  gSpotlightB.aDiffuse.b);
+		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.specular"), gSpotlightB.aSpecular.r, gSpotlightB.aSpecular.g, gSpotlightB.aSpecular.b);
+		glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.constant"), gSpotlightB.aConstant);
+
+		glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.linear"),    gSpotlightB.aLinear);
+		glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.quadratic"), gSpotlightB.aQuadratic);
 
 		// Create camera transformations
 		glm::mat4 lViewMatrix = gCamera.GetViewMatrix();
