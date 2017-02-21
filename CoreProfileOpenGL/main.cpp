@@ -27,18 +27,18 @@ const GLuint WIDTH = 800, HEIGHT = 600;
 Camera gCamera(glm::vec3(0.0f, 0.0f, 3.0f));
 
 // Materials
-Material gCubeMaterial(glm::vec3(1.0f, 0.5f, 0.31f), 100.0f);
-Material gFloorMaterial(glm::vec3(0.0, 0.0, 1.0), 10.0f);
+Material gCubeMaterial(glm::vec3(1.0f, 0.722f, 0.318f), 100.0f);
+Material gFloorMaterial(glm::vec3(0.404f, 0.4f, 0.851f), 10.0f);
 
 // Spotlights
 Spotlight gSpotlightA(glm::vec3(0.0, 3.0, 0.0), 
 					  glm::vec3(0.0, 0.0, 0.0), 
 					  glm::cos(glm::radians(20.0f)), 
-					  glm::cos(glm::radians(25.0f)), 
+					  glm::cos(glm::radians(22.0f)), 
 					  1.0f, 0.09f, 0.032);
 
-Spotlight gSpotlightB(glm::vec3(2.0, 3.0, 3.0), 
-					  glm::vec3(2.0, 0.0, 0.0), 
+Spotlight gSpotlightB(glm::vec3(0.0, 0.0, 3.0), 
+					  glm::vec3(0.0, 0.0, 0.0), 
 					  glm::cos(glm::radians(8.0f)), 
 					  glm::cos(glm::radians(10.0f)), 
 					  1.0f, 0.09f, 0.032);
@@ -191,7 +191,7 @@ int main()
 	GLint lMatShininessLoc = glGetUniformLocation(lLightingProgramID, "material.shininess");
 
 	//Get PROPERTIES for SPOTLIGHT A
-	gSpotlightA.mpSetColor(0.33f, 0.42f, 0.18f); //(mfGetRandomFloat(), mfGetRandomFloat(), mfGetRandomFloat());
+	gSpotlightA.mpSetColor(mfGetRandomFloat(), mfGetRandomFloat(), mfGetRandomFloat());
 
 	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.position"),  gSpotlightA.aPosition.x,  gSpotlightA.aPosition.y,  gSpotlightA.aPosition.z);
 	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.direction"), gSpotlightA.aDirection.x, gSpotlightA.aDirection.y, gSpotlightA.aDirection.z);
@@ -208,7 +208,7 @@ int main()
 	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.quadratic"), gSpotlightA.aQuadratic);
 
 	//Get PROPERTIES for SPOTLIGHT B
-	gSpotlightB.mpSetColor(1.0f, 1.0f, 1.0f);// mfGetRandomFloat(), mfGetRandomFloat(), mfGetRandomFloat());
+	gSpotlightB.mpSetColor(mfGetRandomFloat(), mfGetRandomFloat(), mfGetRandomFloat());
 
 	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.position"),  gSpotlightB.aPosition.x,  gSpotlightB.aPosition.y,  gSpotlightB.aPosition.z);
 	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.direction"), gSpotlightB.aDirection.x, gSpotlightB.aDirection.y, gSpotlightB.aDirection.z);
@@ -241,6 +241,7 @@ int main()
 	lAmbientKeyColors[3] = glm::vec3(0.0f, 0.0f, 1.0f);
 
 	GLfloat lCurrentFrame = 0.0f;
+	float lRotationAngle = 0.0f;
 
 	while (!glfwWindowShouldClose(lWindow))
 	{
@@ -274,7 +275,8 @@ int main()
 		glUniformMatrix4fv(lProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(lProjectionMatrix));
 
 		// Update cube transformations
-		lModelMatrix = glm::mat4();
+		lRotationAngle += 50.0f * gDeltaTime;
+		lModelMatrix = glm::rotate(glm::mat4(), glm::radians(lRotationAngle), glm::vec3(0, 1, 0));
 		glUniformMatrix4fv(lModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(lModelMatrix));
 
 		glUniform3f(lMatDiffuseLoc, gCubeMaterial.aDiffuse.r, gCubeMaterial.aDiffuse.g, gCubeMaterial.aDiffuse.b);
