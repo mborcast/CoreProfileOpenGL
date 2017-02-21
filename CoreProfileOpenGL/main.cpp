@@ -174,9 +174,9 @@ int main()
 
 
 	glm::vec3 lightColor;
-	lightColor.x = sin((float)rand() / (float)RAND_MAX);
-	lightColor.y = sin((float)rand() / (float)RAND_MAX);
-	lightColor.z = sin((float)rand() / (float)RAND_MAX);
+	lightColor.x = (float)rand() / (float)RAND_MAX + 0.5f;
+	lightColor.y = (float)rand() / (float)RAND_MAX + 0.5f;
+	lightColor.z = (float)rand() / (float)RAND_MAX + 0.5f;
 
 	// Game loop
 	while (!glfwWindowShouldClose(window))
