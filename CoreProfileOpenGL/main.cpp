@@ -8,22 +8,27 @@
 #include "shader.hpp"
 #include "Camera.h"
 #include "Spotlight.h"
+#include "Material.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-float mfGetRandomFloat();
 void mpKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void mpMouseCallback(GLFWwindow* window, double xpos, double ypos);
 void mpScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 void mpHandleInput();
+float mfGetRandomFloat();
 
 // Window dimensions
 const GLuint WIDTH = 800, HEIGHT = 600;
 
 // Camera
-Camera  gCamera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera gCamera(glm::vec3(0.0f, 0.0f, 3.0f));
+
+// Materials
+Material gCubeMaterial(glm::vec3(1.0, 1.0, 1.0), 100.0f);
+Material gFloorMaterial(glm::vec3(1.0, 1.0, 1.0), 10.0f);
 
 // Spotlights
 Spotlight gSpotlightA(glm::vec3(0.0, 3.0, 0.0), 
@@ -38,9 +43,8 @@ Spotlight gSpotlightB(glm::vec3(2.0, 3.0, 3.0),
 					  glm::cos(glm::radians(10.0f)), 
 					  1.0f, 0.09f, 0.032);
 
-// Deltatime
-GLfloat gDeltaTime = 0.0f;	// Time between current frame and last frame
-GLfloat gLastFrame = 0.0f;  	// Time of last frame
+GLfloat gDeltaTime = 0.0f;	
+GLfloat gLastFrame = 0.0f;  	
 
 int main()
 {
@@ -180,41 +184,43 @@ int main()
 	glUseProgram(lLightingProgramID);
 
 	// Set material properties
-	glUniform3f(glGetUniformLocation(lLightingProgramID, "material.diffuse"), 1.0f, 1.0f, 1.0f);
-	glUniform3f(glGetUniformLocation(lLightingProgramID, "material.specular"), 0.3f, 0.3f, 0.3f);
-	glUniform1f(glGetUniformLocation(lLightingProgramID, "material.shininess"), 32.0f);
 
-	gSpotlightA.mpSetColor(mfGetRandomFloat(), mfGetRandomFloat(), mfGetRandomFloat());
-	gSpotlightB.mpSetColor(mfGetRandomFloat(), mfGetRandomFloat(), mfGetRandomFloat());
+	GLint lMatDiffuseLoc = glGetUniformLocation(lLightingProgramID, "material.diffuse");
+	GLint lMatSpecularLoc = glGetUniformLocation(lLightingProgramID, "material.specular");
+	GLint lMatShininessLoc = glGetUniformLocation(lLightingProgramID, "material.shininess");
 
 	//Get PROPERTIES for SPOTLIGHT A
-	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.position"), gSpotlightA.aPosition.x, gSpotlightA.aPosition.y, gSpotlightA.aPosition.z);
+	gSpotlightA.mpSetColor(mfGetRandomFloat(), mfGetRandomFloat(), mfGetRandomFloat());
+
+	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.position"),  gSpotlightA.aPosition.x,  gSpotlightA.aPosition.y,  gSpotlightA.aPosition.z);
 	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.direction"), gSpotlightA.aDirection.x, gSpotlightA.aDirection.y, gSpotlightA.aDirection.z);
 
-	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.cutOff"), gSpotlightA.aCutoff);
+	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.cutOff"),      gSpotlightA.aCutoff);
 	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.outerCutOff"), gSpotlightA.aOuterCutoff);
 
-	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.ambient"), gSpotlightA.aAmbient.r, gSpotlightA.aAmbient.g, gSpotlightA.aAmbient.b);
-	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.diffuse"), gSpotlightA.aDiffuse.r, gSpotlightA.aDiffuse.g, gSpotlightA.aDiffuse.b);
+	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.ambient"),  gSpotlightA.aAmbient.r,  gSpotlightA.aAmbient.g,  gSpotlightA.aAmbient.b);
+	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.diffuse"),  gSpotlightA.aDiffuse.r,  gSpotlightA.aDiffuse.g,  gSpotlightA.aDiffuse.b);
 	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.specular"), gSpotlightA.aSpecular.r, gSpotlightA.aSpecular.g, gSpotlightA.aSpecular.b);
 	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.constant"), gSpotlightA.aConstant);
 
-	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.linear"), gSpotlightA.aLinear);
+	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.linear"),    gSpotlightA.aLinear);
 	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.quadratic"), gSpotlightA.aQuadratic);
 
 	//Get PROPERTIES for SPOTLIGHT B
-	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.position"), gSpotlightB.aPosition.x, gSpotlightB.aPosition.y, gSpotlightB.aPosition.z);
+	gSpotlightB.mpSetColor(mfGetRandomFloat(), mfGetRandomFloat(), mfGetRandomFloat());
+
+	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.position"),  gSpotlightB.aPosition.x,  gSpotlightB.aPosition.y,  gSpotlightB.aPosition.z);
 	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.direction"), gSpotlightB.aDirection.x, gSpotlightB.aDirection.y, gSpotlightB.aDirection.z);
 
-	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.cutOff"), gSpotlightB.aCutoff);
+	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.cutOff"),      gSpotlightB.aCutoff);
 	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.outerCutOff"), gSpotlightB.aOuterCutoff);
 
-	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.ambient"), gSpotlightB.aAmbient.r, gSpotlightB.aAmbient.g, gSpotlightB.aAmbient.b);
-	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.diffuse"), gSpotlightB.aDiffuse.r, gSpotlightB.aDiffuse.g, gSpotlightB.aDiffuse.b);
+	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.ambient"),  gSpotlightB.aAmbient.r,  gSpotlightB.aAmbient.g,  gSpotlightB.aAmbient.b);
+	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.diffuse"),  gSpotlightB.aDiffuse.r,  gSpotlightB.aDiffuse.g,  gSpotlightB.aDiffuse.b);
 	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.specular"), gSpotlightB.aSpecular.r, gSpotlightB.aSpecular.g, gSpotlightB.aSpecular.b);
 	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.constant"), gSpotlightB.aConstant);
 
-	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.linear"), gSpotlightB.aLinear);
+	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.linear"),    gSpotlightB.aLinear);
 	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.quadratic"), gSpotlightB.aQuadratic);
 
 	GLint lViewPosLoc = glGetUniformLocation(lLightingProgramID, "viewPos");
@@ -246,29 +252,41 @@ int main()
 		glUseProgram(lLightingProgramID);
 
 		// Update camera transformations
-		lViewMatrix = gCamera.GetViewMatrix();
+		lViewMatrix  = gCamera.GetViewMatrix();
 		lProjectionMatrix = glm::perspective(gCamera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
-		lModelMatrix = glm::mat4();
 
 		// Update view position uniform
 		glUniform3f(lViewPosLoc, gCamera.Position.x, gCamera.Position.y, gCamera.Position.z);
 
 		// Update matrices uniforms
-		glUniformMatrix4fv(lViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(lViewMatrix));
+		glUniformMatrix4fv(lViewMatrixLoc,		 1, GL_FALSE, glm::value_ptr(lViewMatrix));
 		glUniformMatrix4fv(lProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(lProjectionMatrix));
+
+		// Update cube transformations
+		lModelMatrix = glm::mat4();
 		glUniformMatrix4fv(lModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(lModelMatrix));
 
-		// Draw cube
+		glUniform3f(lMatDiffuseLoc, gCubeMaterial.aDiffuse.r, gCubeMaterial.aDiffuse.g, gCubeMaterial.aDiffuse.b);
+		glUniform3f(lMatSpecularLoc, gCubeMaterial.aSpecular.r, gCubeMaterial.aSpecular.g, gCubeMaterial.aSpecular.b);
+		glUniform1f(lMatShininessLoc, gCubeMaterial.aShininess);
+
+		//Draw cube
 		glBindVertexArray(lVAO);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		glBindVertexArray(0);
 
+		glUniform3f(lMatDiffuseLoc, gFloorMaterial.aDiffuse.r, gFloorMaterial.aDiffuse.g, gFloorMaterial.aDiffuse.b);
+		glUniform3f(lMatSpecularLoc, gFloorMaterial.aSpecular.r, gFloorMaterial.aSpecular.g, gFloorMaterial.aSpecular.b);
+		glUniform1f(lMatShininessLoc, gFloorMaterial.aShininess);
+
+		// Update floor transformations
+		lModelMatrix = glm::mat4();
+		lModelMatrix = glm::translate(lModelMatrix, glm::vec3(0.0f, -0.5f, 0.0f));
+		lModelMatrix = glm::scale(lModelMatrix, glm::vec3(5.0f, 0.01f, 5.0f));
+		glUniformMatrix4fv(lModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(lModelMatrix));
+
 		// Draw floor
 		glBindVertexArray(lFloorVAO);
-			lModelMatrix = glm::mat4();
-			lModelMatrix = glm::translate(lModelMatrix, glm::vec3(0.0f, -0.5f, 0.0f));
-			lModelMatrix = glm::scale(lModelMatrix, glm::vec3(5.0f, 0.01f, 5.0f));
-			glUniformMatrix4fv(lModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(lModelMatrix));
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		glBindVertexArray(0);
 
