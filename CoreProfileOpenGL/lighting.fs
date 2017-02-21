@@ -27,6 +27,7 @@ in vec3 Normal;
   
 out vec4 color;
   
+uniform vec3 ambientKeyColor;
 uniform vec3 viewPos;
 uniform Material material;
 uniform Light lightA;
@@ -98,5 +99,7 @@ void main()
 
     vec4 colorB = vec4(ambient + diffuse + specular, 1.0f); 
 
-    color = colorB + colorA; 
+    vec4 ambientColor = vec4(ambientKeyColor * 0.1f, 1.0f);
+
+    color = colorB + colorA + ambientColor; 
 } 
