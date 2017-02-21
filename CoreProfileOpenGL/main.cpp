@@ -126,28 +126,44 @@ int main()
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
 	};
 
-	// First, set the container's VAO (and VBO)
-	//Create VAO
 	GLuint lVAO;
 	glGenVertexArrays(1, &lVAO);
 	glBindVertexArray(lVAO);
 
-	//Create VBO
 	GLuint lVBO;
 	glGenBuffers(1, &lVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, lVBO);
+
 	glBufferData(GL_ARRAY_BUFFER, sizeof(lVerticesData), lVerticesData, GL_STATIC_DRAW);
 	
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
+
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
+
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(2);
 
 	glBindVertexArray(0);
 
+	GLuint lFloorVAO;
+	glGenVertexArrays(1, &lFloorVAO);
+	glBindVertexArray(lFloorVAO);
+
+	//Use the same VBO, the floor is also a 3D cube.
+	glBindBuffer(GL_ARRAY_BUFFER, lVBO);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(1);
+
+	glBindVertexArray(0);
+
 	glUseProgram(lLightingProgramID);
+
 	// Set material properties
 	glUniform3f(glGetUniformLocation(lLightingProgramID, "material.diffuse"), 1.0f, 1.0f, 1.0f);
 	glUniform3f(glGetUniformLocation(lLightingProgramID, "material.specular"), 0.3f, 0.3f, 0.3f);
@@ -187,14 +203,16 @@ int main()
 		GLint lSpotlightPosLoc = glGetUniformLocation(lLightingProgramID, "lightA.position");
 		GLint lSpotlightDirLoc = glGetUniformLocation(lLightingProgramID, "lightA.direction");
 
-		glm::vec3 lSpotlightPositionA(2.0, 2.0, 2.0);
+		glm::vec3 lSpotlightPositionA(0.0, 3.0, 0.0);
+		glm::vec3 lSpotlightTargetA(0.0, 0.0, 0.0);
+		glm::vec3 lSpotlightDirectionA = lSpotlightTargetA - lSpotlightPositionA;
 		glUniform3f(lSpotlightPosLoc, lSpotlightPositionA.x, lSpotlightPositionA.y, lSpotlightPositionA.z);
-		glUniform3f(lSpotlightDirLoc, -lSpotlightPositionA.x, -lSpotlightPositionA.y, -lSpotlightPositionA.z);
+		glUniform3f(lSpotlightDirLoc, lSpotlightDirectionA.x, lSpotlightDirectionA.y, lSpotlightDirectionA.z);
 
 		GLint lSpotlightCutOffLoc = glGetUniformLocation(lLightingProgramID, "lightA.cutOff");
 		GLint lSpotlightOuterCutOffLoc = glGetUniformLocation(lLightingProgramID, "lightA.outerCutOff");
-		glUniform1f(lSpotlightCutOffLoc, glm::cos(glm::radians(8.0f)));
-		glUniform1f(lSpotlightOuterCutOffLoc, glm::cos(glm::radians(10.0f)));
+		glUniform1f(lSpotlightCutOffLoc, glm::cos(glm::radians(20.0f)));
+		glUniform1f(lSpotlightOuterCutOffLoc, glm::cos(glm::radians(25.0f)));
 
 		glm::vec3 lSpotlightDiffuse = lSpotlightColor   * glm::vec3(0.8f); // Decrease the influence
 		glm::vec3 lSpotlightAmbient = lSpotlightDiffuse * glm::vec3(0.2f); // Low influence
@@ -212,16 +230,18 @@ int main()
 		lSpotlightPosLoc = glGetUniformLocation(lLightingProgramID, "lightB.position");
 		lSpotlightDirLoc = glGetUniformLocation(lLightingProgramID, "lightB.direction");
 
-		glm::vec3 lSpotlightPositionB(-2.0, 2.0, 2.0);
+		glm::vec3 lSpotlightPositionB(2.0, 3.0, 3.0);
+		glm::vec3 lSpotlightTargetB(2.0, 0.0, 0.0);
+		glm::vec3 lSpotlightDirectionB = lSpotlightTargetB - lSpotlightPositionB;
 		glUniform3f(lSpotlightPosLoc, lSpotlightPositionB.x, lSpotlightPositionB.y, lSpotlightPositionB.z);
-		glUniform3f(lSpotlightDirLoc, -lSpotlightPositionB.x, -lSpotlightPositionB.y, -lSpotlightPositionB.z);
+		glUniform3f(lSpotlightDirLoc, lSpotlightDirectionB.x, lSpotlightDirectionB.y, lSpotlightDirectionB.z);
 
 		lSpotlightCutOffLoc = glGetUniformLocation(lLightingProgramID, "lightB.cutOff");
 		lSpotlightOuterCutOffLoc = glGetUniformLocation(lLightingProgramID, "lightB.outerCutOff");
 		glUniform1f(lSpotlightCutOffLoc, glm::cos(glm::radians(8.0f)));
 		glUniform1f(lSpotlightOuterCutOffLoc, glm::cos(glm::radians(10.0f)));
 
-		lSpotlightDiffuse = lSpotlightColor   * glm::vec3(0.5f); // Decrease the influence
+		lSpotlightDiffuse = lSpotlightColor   * glm::vec3(0.8f); // Decrease the influence
 		lSpotlightAmbient = lSpotlightDiffuse * glm::vec3(0.2f); // Low influence
 
 		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.ambient"), lSpotlightAmbient.x, lSpotlightAmbient.y, lSpotlightAmbient.z);
@@ -235,12 +255,10 @@ int main()
 		// Create camera transformations
 		glm::mat4 lViewMatrix = gCamera.GetViewMatrix();
 		glm::mat4 lProjectionMatrix = glm::perspective(gCamera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+		glm::mat4 lModelMatrix;
 
 		//Create model transformations
 		lRotationAngle += 40.0 * gDeltaTime;
-
-		glm::mat4 lModelMatrix;
-		lModelMatrix = glm::rotate(lModelMatrix, glm::radians(lRotationAngle), glm::vec3(1, 1, 1));
 
 		// Get the uniform locations
 		GLint lModelMatrixLoc = glGetUniformLocation(lLightingProgramID, "model");
@@ -253,6 +271,15 @@ int main()
 		glUniformMatrix4fv(lModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(lModelMatrix));
 
 		glBindVertexArray(lVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glBindVertexArray(0);
+
+
+		glBindVertexArray(lFloorVAO);
+		lModelMatrix = glm::mat4();
+		lModelMatrix = glm::translate(lModelMatrix, glm::vec3(0.0f, -0.5f, 0.0f));
+		lModelMatrix = glm::scale(lModelMatrix, glm::vec3(5.0f, 0.01f, 5.0f));
+		glUniformMatrix4fv(lModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(lModelMatrix));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glBindVertexArray(0);
 
