@@ -144,9 +144,6 @@ int main()
 	glGenBuffers(1, &lVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, lVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(lVerticesData), lVerticesData, GL_STATIC_DRAW);
-
-
-	glBindVertexArray(lVAO);
 	
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
