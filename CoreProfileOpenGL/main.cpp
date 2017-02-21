@@ -13,6 +13,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+float mfGetRandomFloat();
 void mpKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void mpMouseCallback(GLFWwindow* window, double xpos, double ypos);
 void mpScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
@@ -183,17 +184,55 @@ int main()
 	glUniform3f(glGetUniformLocation(lLightingProgramID, "material.specular"), 0.3f, 0.3f, 0.3f);
 	glUniform1f(glGetUniformLocation(lLightingProgramID, "material.shininess"), 32.0f);
 
-	glm::vec3 lSpotlightColor;
-	lSpotlightColor.x = (float)rand() / (float)RAND_MAX + 0.5f;
-	lSpotlightColor.y = (float)rand() / (float)RAND_MAX + 0.5f;
-	lSpotlightColor.z = (float)rand() / (float)RAND_MAX + 0.5f;
+	gSpotlightA.mpSetColor(mfGetRandomFloat(), mfGetRandomFloat(), mfGetRandomFloat());
+	gSpotlightB.mpSetColor(mfGetRandomFloat(), mfGetRandomFloat(), mfGetRandomFloat());
 
-	float lRotationAngle = 0.0f;
+	//Get PROPERTIES for SPOTLIGHT A
+	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.position"), gSpotlightA.aPosition.x, gSpotlightA.aPosition.y, gSpotlightA.aPosition.z);
+	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.direction"), gSpotlightA.aDirection.x, gSpotlightA.aDirection.y, gSpotlightA.aDirection.z);
+
+	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.cutOff"), gSpotlightA.aCutoff);
+	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.outerCutOff"), gSpotlightA.aOuterCutoff);
+
+	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.ambient"), gSpotlightA.aAmbient.r, gSpotlightA.aAmbient.g, gSpotlightA.aAmbient.b);
+	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.diffuse"), gSpotlightA.aDiffuse.r, gSpotlightA.aDiffuse.g, gSpotlightA.aDiffuse.b);
+	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.specular"), gSpotlightA.aSpecular.r, gSpotlightA.aSpecular.g, gSpotlightA.aSpecular.b);
+	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.constant"), gSpotlightA.aConstant);
+
+	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.linear"), gSpotlightA.aLinear);
+	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.quadratic"), gSpotlightA.aQuadratic);
+
+	//Get PROPERTIES for SPOTLIGHT B
+	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.position"), gSpotlightB.aPosition.x, gSpotlightB.aPosition.y, gSpotlightB.aPosition.z);
+	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.direction"), gSpotlightB.aDirection.x, gSpotlightB.aDirection.y, gSpotlightB.aDirection.z);
+
+	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.cutOff"), gSpotlightB.aCutoff);
+	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.outerCutOff"), gSpotlightB.aOuterCutoff);
+
+	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.ambient"), gSpotlightB.aAmbient.r, gSpotlightB.aAmbient.g, gSpotlightB.aAmbient.b);
+	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.diffuse"), gSpotlightB.aDiffuse.r, gSpotlightB.aDiffuse.g, gSpotlightB.aDiffuse.b);
+	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.specular"), gSpotlightB.aSpecular.r, gSpotlightB.aSpecular.g, gSpotlightB.aSpecular.b);
+	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.constant"), gSpotlightB.aConstant);
+
+	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.linear"), gSpotlightB.aLinear);
+	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.quadratic"), gSpotlightB.aQuadratic);
+
+	GLint lViewPosLoc = glGetUniformLocation(lLightingProgramID, "viewPos");
+	GLint lModelMatrixLoc = glGetUniformLocation(lLightingProgramID, "model");
+	GLint lViewMatrixLoc = glGetUniformLocation(lLightingProgramID, "view");
+	GLint lProjectionMatrixLoc = glGetUniformLocation(lLightingProgramID, "projection");
+
+	glm::mat4 lViewMatrix = gCamera.GetViewMatrix();
+	glm::mat4 lProjectionMatrix = glm::perspective(gCamera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+	glm::mat4 lModelMatrix;
+
 	GLfloat lCurrentFrame = 0.0f;
 
-	// Game loop
 	while (!glfwWindowShouldClose(lWindow))
 	{
+		// Clear the colorbuffer
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 		// Calculate deltatime of current frame
 		lCurrentFrame = glfwGetTime();
 		gDeltaTime = lCurrentFrame - gLastFrame;
@@ -203,88 +242,34 @@ int main()
 		glfwPollEvents();
 		mpHandleInput();
 
-		// Clear the colorbuffer
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 		// Use cooresponding shader when setting uniforms/drawing objects
 		glUseProgram(lLightingProgramID);
 
-		GLint lViewPosLoc = glGetUniformLocation(lLightingProgramID, "viewPos");
+		// Update camera transformations
+		lViewMatrix = gCamera.GetViewMatrix();
+		lProjectionMatrix = glm::perspective(gCamera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+		lModelMatrix = glm::mat4();
+
+		// Update view position uniform
 		glUniform3f(lViewPosLoc, gCamera.Position.x, gCamera.Position.y, gCamera.Position.z);
 
-		//Get PROPERTIES for SPOTLIGHT A
-		GLint lSpotlightPosLoc = glGetUniformLocation(lLightingProgramID, "lightA.position");
-		GLint lSpotlightDirLoc = glGetUniformLocation(lLightingProgramID, "lightA.direction");
-		GLint lSpotlightCutOffLoc = glGetUniformLocation(lLightingProgramID, "lightA.cutOff");
-		GLint lSpotlightOuterCutOffLoc = glGetUniformLocation(lLightingProgramID, "lightA.outerCutOff");
-
-		gSpotlightA.mpSetColor(1.0f, 0.0f, 0.0f);
-
-		glUniform3f(lSpotlightPosLoc, gSpotlightA.aPosition.x,  gSpotlightA.aPosition.y,  gSpotlightA.aPosition.z);
-		glUniform3f(lSpotlightDirLoc, gSpotlightA.aDirection.x, gSpotlightA.aDirection.y, gSpotlightA.aDirection.z);
-
-		glUniform1f(lSpotlightCutOffLoc,      gSpotlightA.aCutoff);
-		glUniform1f(lSpotlightOuterCutOffLoc, gSpotlightA.aOuterCutoff);
-
-		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.ambient"),  gSpotlightA.aAmbient.r,  gSpotlightA.aAmbient.g,  gSpotlightA.aAmbient.b);
-		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.diffuse"),  gSpotlightA.aDiffuse.r,  gSpotlightA.aDiffuse.g,  gSpotlightA.aDiffuse.b);
-		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.specular"), gSpotlightA.aSpecular.r, gSpotlightA.aSpecular.g, gSpotlightA.aSpecular.b);
-		glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.constant"), gSpotlightA.aConstant);
-
-		glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.linear"),    gSpotlightA.aLinear);
-		glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.quadratic"), gSpotlightA.aQuadratic);
-
-		//Get PROPERTIES for SPOTLIGHT B
-		lSpotlightPosLoc = glGetUniformLocation(lLightingProgramID, "lightB.position");
-		lSpotlightDirLoc = glGetUniformLocation(lLightingProgramID, "lightB.direction");
-		lSpotlightCutOffLoc = glGetUniformLocation(lLightingProgramID, "lightB.cutOff");
-		lSpotlightOuterCutOffLoc = glGetUniformLocation(lLightingProgramID, "lightB.outerCutOff");
-
-		gSpotlightB.mpSetColor(1.0f, 0.0f, 0.0f);
-
-		glUniform3f(lSpotlightPosLoc, gSpotlightB.aPosition.x,  gSpotlightB.aPosition.y,  gSpotlightB.aPosition.z);
-		glUniform3f(lSpotlightDirLoc, gSpotlightB.aDirection.x, gSpotlightB.aDirection.y, gSpotlightB.aDirection.z);
-
-		glUniform1f(lSpotlightCutOffLoc,      gSpotlightB.aCutoff);
-		glUniform1f(lSpotlightOuterCutOffLoc, gSpotlightB.aOuterCutoff);
-
-		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.ambient"),  gSpotlightB.aAmbient.r,  gSpotlightB.aAmbient.g,  gSpotlightB.aAmbient.b);
-		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.diffuse"),  gSpotlightB.aDiffuse.r,  gSpotlightB.aDiffuse.g,  gSpotlightB.aDiffuse.b);
-		glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.specular"), gSpotlightB.aSpecular.r, gSpotlightB.aSpecular.g, gSpotlightB.aSpecular.b);
-		glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.constant"), gSpotlightB.aConstant);
-
-		glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.linear"),    gSpotlightB.aLinear);
-		glUniform1f(glGetUniformLocation(lLightingProgramID, "lightB.quadratic"), gSpotlightB.aQuadratic);
-
-		// Create camera transformations
-		glm::mat4 lViewMatrix = gCamera.GetViewMatrix();
-		glm::mat4 lProjectionMatrix = glm::perspective(gCamera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
-		glm::mat4 lModelMatrix;
-
-		//Create model transformations
-		lRotationAngle += 40.0 * gDeltaTime;
-
-		// Get the uniform locations
-		GLint lModelMatrixLoc = glGetUniformLocation(lLightingProgramID, "model");
-		GLint lViewMatrixLoc = glGetUniformLocation(lLightingProgramID, "view");
-		GLint lProjectionMatrixLoc = glGetUniformLocation(lLightingProgramID, "projection");
-
-		// Pass the matrices to the shader
+		// Update matrices uniforms
 		glUniformMatrix4fv(lViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(lViewMatrix));
 		glUniformMatrix4fv(lProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(lProjectionMatrix));
 		glUniformMatrix4fv(lModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(lModelMatrix));
 
+		// Draw cube
 		glBindVertexArray(lVAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
 		glBindVertexArray(0);
 
-
+		// Draw floor
 		glBindVertexArray(lFloorVAO);
-		lModelMatrix = glm::mat4();
-		lModelMatrix = glm::translate(lModelMatrix, glm::vec3(0.0f, -0.5f, 0.0f));
-		lModelMatrix = glm::scale(lModelMatrix, glm::vec3(5.0f, 0.01f, 5.0f));
-		glUniformMatrix4fv(lModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(lModelMatrix));
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+			lModelMatrix = glm::mat4();
+			lModelMatrix = glm::translate(lModelMatrix, glm::vec3(0.0f, -0.5f, 0.0f));
+			lModelMatrix = glm::scale(lModelMatrix, glm::vec3(5.0f, 0.01f, 5.0f));
+			glUniformMatrix4fv(lModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(lModelMatrix));
+			glDrawArrays(GL_TRIANGLES, 0, 36);
 		glBindVertexArray(0);
 
 		// Swap the screen buffers
@@ -350,4 +335,9 @@ void mpMouseCallback(GLFWwindow* window, double xpos, double ypos)
 void mpScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	gCamera.ProcessMouseScroll(yoffset);
+}
+
+float mfGetRandomFloat()
+{
+	return (float)rand() / (float)RAND_MAX;
 }
