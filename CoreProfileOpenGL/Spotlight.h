@@ -45,7 +45,7 @@ public:
 		this->aColor.b = pB;
 
 		this->aDiffuse = this->aColor * glm::vec3(0.8f); // Decrease the influence
-		this->aAmbient = this->aDiffuse * glm::vec3(0.2f); // Low influence
+		this->aAmbient = this->aDiffuse * glm::vec3(0.25f); // Low influence
 		this->aSpecular = glm::vec3(1.0f);
 	}
 };
