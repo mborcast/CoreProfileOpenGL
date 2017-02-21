@@ -27,8 +27,8 @@ const GLuint WIDTH = 800, HEIGHT = 600;
 Camera gCamera(glm::vec3(0.0f, 0.0f, 3.0f));
 
 // Materials
-Material gCubeMaterial(glm::vec3(1.0, 1.0, 1.0), 100.0f);
-Material gFloorMaterial(glm::vec3(1.0, 1.0, 1.0), 10.0f);
+Material gCubeMaterial(glm::vec3(1.0f, 0.5f, 0.31f), 100.0f);
+Material gFloorMaterial(glm::vec3(0.0, 0.0, 1.0), 10.0f);
 
 // Spotlights
 Spotlight gSpotlightA(glm::vec3(0.0, 3.0, 0.0), 
@@ -45,6 +45,7 @@ Spotlight gSpotlightB(glm::vec3(2.0, 3.0, 3.0),
 
 GLfloat gDeltaTime = 0.0f;	
 GLfloat gLastFrame = 0.0f;  	
+int gCurrentAmbientIdx = 0;
 
 int main()
 {
@@ -190,7 +191,7 @@ int main()
 	GLint lMatShininessLoc = glGetUniformLocation(lLightingProgramID, "material.shininess");
 
 	//Get PROPERTIES for SPOTLIGHT A
-	gSpotlightA.mpSetColor(mfGetRandomFloat(), mfGetRandomFloat(), mfGetRandomFloat());
+	gSpotlightA.mpSetColor(0.33f, 0.42f, 0.18f); //(mfGetRandomFloat(), mfGetRandomFloat(), mfGetRandomFloat());
 
 	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.position"),  gSpotlightA.aPosition.x,  gSpotlightA.aPosition.y,  gSpotlightA.aPosition.z);
 	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightA.direction"), gSpotlightA.aDirection.x, gSpotlightA.aDirection.y, gSpotlightA.aDirection.z);
@@ -207,7 +208,7 @@ int main()
 	glUniform1f(glGetUniformLocation(lLightingProgramID, "lightA.quadratic"), gSpotlightA.aQuadratic);
 
 	//Get PROPERTIES for SPOTLIGHT B
-	gSpotlightB.mpSetColor(mfGetRandomFloat(), mfGetRandomFloat(), mfGetRandomFloat());
+	gSpotlightB.mpSetColor(1.0f, 1.0f, 1.0f);// mfGetRandomFloat(), mfGetRandomFloat(), mfGetRandomFloat());
 
 	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.position"),  gSpotlightB.aPosition.x,  gSpotlightB.aPosition.y,  gSpotlightB.aPosition.z);
 	glUniform3f(glGetUniformLocation(lLightingProgramID, "lightB.direction"), gSpotlightB.aDirection.x, gSpotlightB.aDirection.y, gSpotlightB.aDirection.z);
@@ -228,9 +229,16 @@ int main()
 	GLint lViewMatrixLoc = glGetUniformLocation(lLightingProgramID, "view");
 	GLint lProjectionMatrixLoc = glGetUniformLocation(lLightingProgramID, "projection");
 
-	glm::mat4 lViewMatrix = gCamera.GetViewMatrix();
-	glm::mat4 lProjectionMatrix = glm::perspective(gCamera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+	glm::mat4 lViewMatrix;
+	glm::mat4 lProjectionMatrix;
 	glm::mat4 lModelMatrix;
+
+	GLint lAmbientKeyColorLoc = glGetUniformLocation(lLightingProgramID, "ambientKeyColor");
+	glm::vec3 lAmbientKeyColors[4];
+	lAmbientKeyColors[0] = glm::vec3(0.0f, 0.0f, 0.0f);
+	lAmbientKeyColors[1] = glm::vec3(1.0f, 0.0f, 0.0f);
+	lAmbientKeyColors[2] = glm::vec3(0.0f, 1.0f, 0.0f);
+	lAmbientKeyColors[3] = glm::vec3(0.0f, 0.0f, 1.0f);
 
 	GLfloat lCurrentFrame = 0.0f;
 
@@ -250,6 +258,9 @@ int main()
 
 		// Use cooresponding shader when setting uniforms/drawing objects
 		glUseProgram(lLightingProgramID);
+
+		//Update ambient color
+		glUniform3f(lAmbientKeyColorLoc, lAmbientKeyColors[gCurrentAmbientIdx].r, lAmbientKeyColors[gCurrentAmbientIdx].g, lAmbientKeyColors[gCurrentAmbientIdx].b);
 
 		// Update camera transformations
 		lViewMatrix  = gCamera.GetViewMatrix();
@@ -300,10 +311,32 @@ int main()
 }
 
 bool gKeysPressed[1024];
+
 void mpKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GL_TRUE);
+	if (action == GLFW_PRESS)
+	{
+		switch (key)
+		{
+		case GLFW_KEY_ESCAPE:
+			glfwSetWindowShouldClose(window, GL_TRUE);
+			break;
+		case GLFW_KEY_J:
+			gCurrentAmbientIdx = 0;
+			break;
+		case GLFW_KEY_K:
+			gCurrentAmbientIdx = 1;
+			break;
+		case GLFW_KEY_L:
+			gCurrentAmbientIdx = 2;
+			break;
+		case GLFW_KEY_I:
+			gCurrentAmbientIdx = 3;
+			break;
+		default:
+			break;
+		}
+	}
 
 	if (key >= 0 && key < 1024)
 	{
